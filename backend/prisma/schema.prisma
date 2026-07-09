@@ -1,0 +1,54 @@
+// prisma/schema.prisma
+//
+// Este archivo describe la estructura de tu base de datos.
+// Prisma lo lee y genera el SQL real (CREATE TABLE, etc.) por ti.
+// Nunca escribes SQL a mano para esto — describes el modelo, Prisma hace el resto.
+
+generator client {
+  provider = "prisma-client-js"   // genera un cliente JS tipado para usar en el código
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")  // lee la conexión desde el archivo .env, nunca hardcodeada
+  directUrl = env("DIRECT_URL")
+}
+
+// ── Tabla de usuarios ──────────────────────────────────────────
+//
+// Equivale a: CREATE TABLE "User" (id UUID PRIMARY KEY, email TEXT UNIQUE, ...)
+model User {
+  id           String   @id @default(uuid())   // clave primaria, UUID en vez de número incremental
+  email        String   @unique                 // @unique = Postgres rechaza emails duplicados a nivel de BD
+  passwordHash String                            // SOLO el hash bcrypt — nunca la contraseña real
+  name         String   @default("Mi Diario")
+  createdAt    DateTime @default(now())
+
+  // Relación uno-a-muchos: un usuario tiene muchas entradas.
+  // Esto no crea una columna nueva aquí — es solo la relación "inversa"
+  // de la que se declara abajo en el modelo Entry.
+  entries      Entry[]
+}
+
+// ── Tabla de entradas del diario ────────────────────────────────
+//
+// Equivale a: CREATE TABLE "Entry" (id UUID PRIMARY KEY, date TEXT, ..., userId UUID REFERENCES User(id))
+model Entry {
+  id        String   @id @default(uuid())
+  date      String                       // formato 'YYYY-MM-DD', igual que en el frontend
+  title     String   @default("")
+  content   String                       // tipo TEXT en Postgres, sin límite práctico de longitud
+  mood      String?                      // el '?' significa que puede ser NULL (es opcional)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt          // Prisma actualiza esto automáticamente en cada UPDATE
+
+  // Clave foránea hacia User. onDelete: Cascade significa:
+  // si se borra un usuario, todas sus entradas se borran automáticamente con él.
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Restricción compuesta: un mismo usuario NO puede tener dos entradas
+  // con la misma fecha. Esto reemplaza la lógica que antes vivía en el
+  // frontend (una entrada por día) — ahora la base de datos la garantiza.
+  @@unique([userId, date])
+}

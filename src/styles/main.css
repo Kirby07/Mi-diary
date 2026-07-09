@@ -1,0 +1,128 @@
+/* ─── Reset ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Tokens globales (tema oscuro como base) ─────────────── */
+:root {
+  --a:   #9B8EC4;
+  --ad:  rgba(155,142,196,.15);
+  --bg:  #131219;
+  --sf:  #1E1C28;
+  --sf2: #262434;
+  --sf3: #2E2B3E;
+  --tx:  #EAE6F4;
+  --tm:  #8B82A3;
+  --tf:  #4A4560;
+  --bd:  #302D42;
+  --rs:  6px;
+  --r:   10px;
+  --rl:  14px;
+  --fb:  'Lora', Georgia, serif;
+  --fsb: 14px;
+  --fsl: 16px;
+  --fsxl:22px;
+}
+
+/* ─── Temas ───────────────────────────────────────────────── */
+.th-dark  { --bg:#131219; --sf:#1E1C28; --sf2:#262434; --sf3:#2E2B3E; --tx:#EAE6F4; --tm:#8B82A3; --tf:#4A4560; --bd:#302D42; }
+.th-light { --bg:#FAF8FF; --sf:#FFFFFF; --sf2:#F3F0FA; --sf3:#EAE5F5; --tx:#1C1830; --tm:#6B5E8A; --tf:#C4B8DA; --bd:#E5DFF5; }
+.th-sepia { --bg:#F5ECD7; --sf:#FFFDF5; --sf2:#F0E9D2; --sf3:#E5D9BC; --tx:#3A2E1E; --tm:#7A6040; --tf:#C4A87A; --bd:#D9CCAA; }
+
+/* ─── Fuentes ─────────────────────────────────────────────── */
+.ff-serif { --fb: 'Lora',     Georgia,        serif;     }
+.ff-sans  { --fb: 'Inter',    system-ui,      sans-serif; }
+.ff-mono  { --fb: 'Courier New', Courier,     monospace;  }
+
+/* ─── Tamaños ─────────────────────────────────────────────── */
+.fs-sm { --fsb:12px; --fsl:14px; --fsxl:19px; }
+.fs-md { --fsb:14px; --fsl:16px; --fsxl:22px; }
+.fs-lg { --fsb:16px; --fsl:19px; --fsxl:26px; }
+
+/* ─── App root ────────────────────────────────────────────── */
+#app {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: var(--fsb);
+  line-height: 1.5;
+  transition: background .3s, color .3s;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+.app-bar {
+  position: sticky; top: 0; z-index: 50;
+  height: 50px;
+  background: var(--sf);
+  border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; gap: 8px;
+}
+.app-logo {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--fb); font-size: 15px; font-weight: 600; color: var(--tx);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+.app-logo-dot { width:7px; height:7px; border-radius:50%; background:var(--a); flex-shrink:0; transition:background .3s; }
+.app-nav { display:flex; align-items:center; gap:2px; }
+.nav-btn {
+  padding: 5px 10px; border-radius: var(--rs); border: none; background: none;
+  color: var(--tm); font-size: 12px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: background .14s, color .14s; font-family: 'Inter', sans-serif; white-space: nowrap;
+}
+.nav-btn:hover { background:var(--sf2); color:var(--tx); }
+.nav-btn.active { background:var(--ad); color:var(--a); }
+.lock-btn {
+  padding: 5px 8px; border-radius: var(--rs); border: none; background: none;
+  color: var(--a); font-size: 14px; cursor: pointer; transition: all .14s; margin-left: 4px;
+}
+.lock-btn:hover { background: var(--sf2); }
+
+/* ─── Main layout ─────────────────────────────────────────── */
+.app-main { max-width: 740px; margin: 0 auto; padding: 18px 16px 56px; }
+
+/* ─── Week navigator ──────────────────────────────────────── */
+.week-nav { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.week-center { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.week-label  { font-family:var(--fb); font-size:var(--fsl); font-style:italic; color:var(--tx); text-align:center; }
+.icon-btn {
+  width:30px; height:30px; border-radius:var(--rs); border:1px solid var(--bd);
+  background:var(--sf); color:var(--tm); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:13px;
+  transition:all .14s; flex-shrink:0;
+}
+.icon-btn:hover { background:var(--sf2); color:var(--tx); }
+.today-btn {
+  padding:2px 9px; border-radius:var(--rs); border:1px solid var(--bd);
+  background:var(--sf); color:var(--tm); font-size:10px; font-weight:700;
+  cursor:pointer; transition:all .14s; font-family:'Inter',sans-serif;
+  text-transform:uppercase; letter-spacing:.05em;
+}
+.today-btn:hover { background:var(--ad); color:var(--a); border-color:var(--a); }
+
+/* ─── Empty state ─────────────────────────────────────────── */
+.empty-state {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:46px 24px; text-align:center;
+  background:var(--sf); border:1px solid var(--bd); border-radius:var(--rl);
+}
+.empty-glyph { font-size:30px; margin-bottom:10px; opacity:.4; display:block; }
+.empty-title { font-family:var(--fb); font-size:var(--fsl); font-style:italic; color:var(--tx); margin-bottom:5px; }
+.empty-desc  { font-size:11px; color:var(--tm); line-height:1.6; max-width:240px; }
+
+/* ─── Transitions ─────────────────────────────────────────── */
+.slide-enter-active { transition: opacity .22s ease, transform .22s ease; }
+.slide-enter-from   { opacity:0; transform:translateY(10px); }
+.slide-leave-active { transition: opacity .14s ease; }
+.slide-leave-to     { opacity:0; }
+
+/* ─── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--bd); border-radius:2px; }
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .nav-label { display: none; }
+  .nav-btn   { padding: 5px 7px; }
+}

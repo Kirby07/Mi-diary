@@ -1,0 +1,25 @@
+# docker-compose.yml
+#
+# Levanta una base de datos PostgreSQL en un contenedor aislado,
+# sin necesidad de instalar Postgres directamente en tu sistema.
+#
+# Uso:
+#   docker compose up -d     → arranca la base de datos en segundo plano
+#   docker compose down      → la detiene
+#   docker compose down -v   → la detiene Y borra todos los datos (¡cuidado!)
+
+services:
+  postgres:
+    image: postgres:16-alpine     # versión ligera de la imagen oficial
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: diario_user
+      POSTGRES_PASSWORD: diario_pass_dev   # solo para desarrollo local, nunca en producción
+      POSTGRES_DB: diario_db
+    ports:
+      - "5432:5432"                # puerto estándar de Postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # persiste los datos aunque borres el contenedor
+
+volumes:
+  pgdata:
