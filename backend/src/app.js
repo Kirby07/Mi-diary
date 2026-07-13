@@ -22,6 +22,7 @@ export const app = express()
 // X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, etc.
 // Es el equivalente real a la tarjeta "Headers HTTP de seguridad" de
 // la guía inicial — aquí ya no es una explicación, es código funcionando.
+app.set('trust proxy', 1)   // necesario si tu app está detrás de un proxy (ej: Render o Heroku)
 app.use(helmet())
 
 // cors() controla qué orígenes (dominios) pueden hacer peticiones a esta
