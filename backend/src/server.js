@@ -10,5 +10,5 @@ import { app } from './app.js'
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
-  console.log(`✦ Servidor del diario corriendo en http://localhost:${PORT}`)
+  console.log('CORS_ORIGIN configurado como:', process.env.CORS_ORIGIN)
 })
