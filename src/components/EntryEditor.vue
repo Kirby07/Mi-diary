@@ -1,16 +1,18 @@
-<script setup>
+<<script setup>
 import { ref, computed, nextTick } from 'vue'
 import { fullDate } from '@/utils/dates.js'
+import ImageCanvas from '@/components/ImageCanvas.vue'
 
 const MOODS = ['😊','😄','😔','😤','😰','😴','🤩','💪','❤️','🤒']
 
 const props = defineProps({
   date:        { type: String, required: true },
   modelValue:  { type: Object, required: true },  // { title, content, mood }
+  images:      { type: Array,  default: () => [] },
   saveStatus:  { type: String, default: '' },
   hasExisting: { type: Boolean, default: false }
 })
-const emit = defineEmits(['update:modelValue', 'save', 'change', 'view'])
+const emit = defineEmits(['update:modelValue', 'save', 'change', 'view', 'images-change'])
 
 const textareaRef = ref(null)
 
@@ -80,6 +82,16 @@ function toggleMood(m) {
       />
     </div>
 
+    <!-- Fotos de la entrada -->
+    <div class="editor-images">
+      <ImageCanvas
+        :date="date"
+        :images="images"
+        :editable="true"
+        @change="emit('images-change', $event)"
+      />
+    </div>
+
     <!-- Footer con contadores y acciones -->
     <div class="editor-foot">
       <span class="word-count">
@@ -126,6 +138,8 @@ function toggleMood(m) {
 }
 .editor-textarea::placeholder { color:var(--tf); font-style:italic; }
 
+.editor-images { padding: 0 18px 14px; }
+
 .editor-foot {
   display:flex; align-items:center; justify-content:space-between;
   padding:10px 18px; border-top:1px solid var(--bd);
@@ -144,3 +158,4 @@ function toggleMood(m) {
 .btn-accent { background:var(--a); color:#fff; }
 .btn-accent:hover { opacity:.85; }
 </style>
+
