@@ -47,8 +47,45 @@ model Entry {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Una entrada puede tener muchas imágenes. onDelete: Cascade aquí también:
+  // si se borra la entrada, sus imágenes se borran automáticamente de la tabla
+  // (aunque el ARCHIVO en Supabase Storage hay que borrarlo aparte — ver
+  // images.controller.js, Postgres no sabe nada sobre el bucket de Storage).
+  images    Image[]
+
   // Restricción compuesta: un mismo usuario NO puede tener dos entradas
   // con la misma fecha. Esto reemplaza la lógica que antes vivía en el
   // frontend (una entrada por día) — ahora la base de datos la garantiza.
   @@unique([userId, date])
+}
+
+// ── Tabla de imágenes adjuntas a una entrada ──────────────────────
+//
+// Guardamos solo METADATOS aquí — el archivo real vive en Supabase
+// Storage. "storagePath" es la ruta dentro del bucket (ej: "a1b2.../foto.jpg"),
+// necesaria para poder borrar o firmar una URL temporal hacia ese archivo.
+//
+// No guardamos una URL pública fija: el bucket es PRIVADO (más seguro para
+// contenido personal), así que las URLs se generan "al vuelo" y expiran —
+// ver attachSignedUrls() en utils/entryHelpers.js.
+model Image {
+  id            String   @id @default(uuid())
+  storagePath   String                     // ruta dentro del bucket de Supabase Storage
+  naturalWidth  Int                        // ancho real en píxeles (tras reprocesar con sharp)
+  naturalHeight Int                        // alto real en píxeles — junto al ancho, define el
+                                            // aspect ratio que el frontend usa para no deformar
+                                            // la imagen al redimensionarla (ver ImageCanvas.vue)
+
+  // Posición y tamaño dentro del "lienzo" de la entrada, en PORCENTAJE
+  // (no píxeles) — así la posición se mantiene consistente sin importar
+  // el tamaño de pantalla del dispositivo donde se vea.
+  x             Float    @default(5)       // % desde la izquierda del lienzo
+  y             Float    @default(5)       // % desde arriba del lienzo
+  w             Float    @default(30)      // % del ancho del lienzo (el alto se DERIVA
+                                            // del aspect ratio, nunca se guarda directamente)
+
+  createdAt     DateTime @default(now())
+
+  entryId       String
+  entry         Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }
