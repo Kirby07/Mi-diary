@@ -22,3 +22,12 @@ export const registerLimiter = rateLimit({
   max: 10,
   message: { error: 'Demasiados registros desde esta IP. Intenta más tarde.' }
 })
+// Subir imágenes es una operación costosa (ancho de banda, reprocesamiento
+// con sharp, almacenamiento en Supabase) — un límite más bajo que el resto
+// de la API evita que una cuenta comprometida o un bug en el frontend
+// llene el bucket de Storage a base de peticiones repetidas.
+export const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,                      // 40 imágenes cada 15 min es generoso para uso normal
+  message: { error: 'Demasiadas imágenes subidas en poco tiempo. Espera un momento.' }
+})
