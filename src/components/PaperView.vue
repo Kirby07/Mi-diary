@@ -1,9 +1,10 @@
 <script setup>
 import { fullDate } from '@/utils/dates.js'
+import ImageCanvas from '@/components/ImageCanvas.vue'
 
 defineProps({
   date:  { type: String, required: true },
-  entry: { type: Object, required: true }   // { title, content, mood }
+  entry: { type: Object, required: true }   // { title, content, mood, images }
 })
 const emit = defineEmits(['edit', 'delete'])
 </script>
@@ -30,6 +31,13 @@ const emit = defineEmits(['edit', 'delete'])
 
         <!-- white-space:pre-wrap preserva los saltos de línea del textarea -->
         <div class="pa-body">{{ entry.content }}</div>
+
+        <!-- Fotos de la entrada, en modo solo-lectura (sin asas de
+             arrastre/redimensionado ni botón de subida) — para editar
+             fotos hay que volver al modo Editar, igual que con el texto. -->
+        <div v-if="entry.images?.length" class="pa-photos">
+          <ImageCanvas :date="date" :images="entry.images" :editable="false" />
+        </div>
       </div>
 
       <!-- Esquina doblada (sello visual de papel) -->
@@ -90,6 +98,7 @@ const emit = defineEmits(['edit', 'delete'])
   color: #2C2416;
   white-space: pre-wrap; word-break: break-word;
 }
+.pa-photos { margin-top: 20px; }
 
 .paper-actions { display:flex; gap:8px; justify-content:flex-end; width:100%; max-width:600px; }
 .pa-btn {
