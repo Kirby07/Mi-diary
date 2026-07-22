@@ -11,6 +11,7 @@ import cors from 'cors'
 
 import authRoutes from './routes/auth.routes.js'
 import entriesRoutes from './routes/entries.routes.js'
+import imagesRoutes from './routes/images.routes.js'
 
 export const app = express()
 
@@ -45,6 +46,12 @@ app.use(express.json({ limit: '100kb' }))   // límite de tamaño: previene payl
 app.use('/auth', authRoutes)
 app.use('/entries', entriesRoutes)
 
+// images.routes.js se monta en la raíz porque sus rutas ya declaran
+// sus propios prefijos completos ('/entries/:date/images', '/images/:id')
+// — necesita convivir con entriesRoutes bajo el mismo prefijo /entries
+// sin que Express los confunda entre sí.
+app.use(imagesRoutes)
+
 // Ruta simple de salud — útil para verificar que el servidor responde
 // sin necesidad de autenticación (la usan los servicios de hosting
 // para saber si tu app sigue viva).
@@ -61,8 +68,26 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }))
 app.use((err, req, res, next) => {
   console.error(err)   // en producción, esto iría a un servicio de logging real
 
-  // Nunca devolvemos err.message o err.stack al cliente: podrían
-  // filtrar detalles internos (rutas de archivos, versiones de
-  // librerías, fragmentos de queries SQL) útiles para un atacante.
+  // Los errores de Multer (archivo demasiado grande, demasiados
+  // archivos, tipo no permitido) son errores del CLIENTE, no fallas
+  // del servidor — les damos 400 con un mensaje claro en vez del
+  // genérico 500 que usamos para todo lo demás.
+  if (err.name === 'MulterError') {
+    const messages = {
+      LIMIT_FILE_SIZE:  'La imagen supera el tamaño máximo permitido (8MB)',
+      LIMIT_FILE_COUNT: 'Puedes subir un máximo de 5 imágenes a la vez'
+    }
+    return res.status(400).json({ error: messages[err.code] || err.message })
+  }
+  // Error lanzado por nuestro propio fileFilter en upload.middleware.js
+  if (err.message?.startsWith('Solo se permiten imágenes')) {
+    return res.status(400).json({ error: err.message })
+  }
+
+  // Nunca devolvemos err.message o err.stack al cliente para el resto
+  // de errores: podrían filtrar detalles internos (rutas de archivos,
+  // versiones de librerías, fragmentos de queries SQL) útiles para
+  // un atacante.
   res.status(500).json({ error: 'Error interno del servidor' })
 })
+
