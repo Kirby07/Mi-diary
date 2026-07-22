@@ -14,8 +14,8 @@ const emit = defineEmits(['select'])
       @click="emit('select', d.key)"
       :class="['day-card', d.isToday ? 'today' : '', selected === d.key ? 'selected' : '']"
     >
-      <!-- Punto de acento si la entrada existe -->
-      <span v-if="entries[d.key]?.content" class="entry-dot" />
+      <!-- Punto de acento si la entrada existe (texto O fotos) -->
+      <span v-if="entries[d.key]?.content || entries[d.key]?.images?.length" class="entry-dot" />
 
       <span class="day-name">{{ d.short }}</span>
 
@@ -24,6 +24,7 @@ const emit = defineEmits(['select'])
       <span v-if="entries[d.key]?.mood" class="day-mood">{{ entries[d.key].mood }}</span>
 
       <span v-if="entries[d.key]?.content" class="day-snip">{{ entries[d.key].content.trim().slice(0, 50) }}</span>
+      <span v-else-if="entries[d.key]?.images?.length" class="day-photos">📷 {{ entries[d.key].images.length }}</span>
       <span v-else class="day-plus">+</span>
     </div>
   </div>
@@ -65,6 +66,7 @@ const emit = defineEmits(['select'])
   width: 100%; padding: 0 2px; margin-top: 2px;
 }
 .day-plus { font-size:15px; color:var(--tf); margin-top:auto; line-height:1; }
+.day-photos { font-size: 10px; color: var(--tm); margin-top: auto; }
 
 @media (max-width: 480px) { .day-snip { display: none; } }
 </style>
