@@ -61,7 +61,13 @@ const wrdCnt  = computed(() => { const t = draft.value.content.trim(); return t 
 watch(cfg, applyAll, { deep: true })
 
 // ── Días y entradas ──────────────────────────────────────────
-function hasEntry(key) { return !!(entries.value[key]?.content) }
+// Un día "tiene entrada" si tiene texto O al menos una foto — importante
+// para el punto indicador en WeekGrid: sin esto, un día con fotos pero
+// sin una sola palabra escrita se vería como un día vacío en la cuadrícula.
+function hasEntry(key) {
+  const e = entries.value[key]
+  return !!(e?.content || e?.images?.length)
+}
 
 async function pickDay(key) {
   // Auto-guardar borrador actual antes de cambiar de día
@@ -71,7 +77,7 @@ async function pickDay(key) {
   sel.value = key
   const e = entries.value[key]
   draft.value = { title: e?.title ?? '', content: e?.content ?? '', mood: e?.mood ?? null }
-  mode.value  = e?.content ? 'view' : 'edit'
+  mode.value  = hasEntry(key) ? 'view' : 'edit'
   resetActivity()
 }
 
@@ -138,6 +144,17 @@ function onEditorChange() {
 }
 
 function showSt(msg) { st.value = msg; setTimeout(() => { st.value = '' }, 2400) }
+
+// Se llama cuando ImageCanvas emite 'change' (tras subir, borrar,
+// arrastrar o redimensionar una foto). ImageCanvas ya hizo la llamada
+// a la API por su cuenta — aquí solo sincronizamos el array resultante
+// de vuelta en entries.value, para que WeekGrid y el resto de la UI
+// reflejen el cambio sin esperar a una recarga completa.
+function onImagesChange(newImages) {
+  if (!sel.value) return
+  if (!entries.value[sel.value]) entries.value[sel.value] = { date: sel.value, title: '', content: '', mood: null }
+  entries.value[sel.value] = { ...entries.value[sel.value], images: newImages }
+}
 
 // ── Seguridad: PIN ────────────────────────────────────────────
 async function verifyPin(pin) {
@@ -266,7 +283,7 @@ function goToToday() {
   sel.value   = today
   const e     = entries.value[today]
   draft.value = { title: e?.title ?? '', content: e?.content ?? '', mood: e?.mood ?? null }
-  mode.value  = e?.content ? 'view' : 'edit'
+  mode.value  = hasEntry(today) ? 'view' : 'edit'
 }
 </script>
 
@@ -342,11 +359,13 @@ function goToToday() {
             key="editor"
             :date="sel"
             v-model="draft"
+            :images="entries[sel]?.images || []"
             :save-status="st"
             :has-existing="hasEntry(sel)"
             @save="saveEntry"
             @change="onEditorChange"
             @view="mode = 'view'"
+            @images-change="onImagesChange"
           />
 
           <!-- Estado vacío (ningún día seleccionado) -->
