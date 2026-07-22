@@ -9,7 +9,6 @@
 // a través de import.meta.env. Crea un archivo .env en la raíz del
 // frontend con: VITE_API_URL=http://localhost:3000
 
-import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 
