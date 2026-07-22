@@ -1,0 +1,17 @@
+-- CreateTable
+CREATE TABLE "Image" (
+    "id" TEXT NOT NULL,
+    "storagePath" TEXT NOT NULL,
+    "naturalWidth" INTEGER NOT NULL,
+    "naturalHeight" INTEGER NOT NULL,
+    "x" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "y" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "w" DOUBLE PRECISION NOT NULL DEFAULT 30,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "entryId" TEXT NOT NULL,
+
+    CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_entryId_fkey" FOREIGN KEY ("entryId") REFERENCES "Entry"("id") ON DELETE CASCADE ON UPDATE CASCADE;
