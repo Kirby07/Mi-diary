@@ -275,7 +275,7 @@ async function persist(img) {
 .canvas {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 21 / 9;
   background: var(--sf2);
   border: 1px dashed var(--bd);
   border-radius: var(--r);
