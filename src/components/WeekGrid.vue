@@ -68,5 +68,5 @@ const emit = defineEmits(['select'])
 .day-plus { font-size:15px; color:var(--tf); margin-top:auto; line-height:1; }
 .day-photos { font-size: 10px; color: var(--tm); margin-top: auto; }
 
-@media (max-width: 480px) { .day-snip { display: none; } }
+@media (max-width: 480px) { .day-snip { display: none; } }  
 </style>
