@@ -22,6 +22,27 @@
 // quien decide si el usuario tiene permiso, ANTES de llegar aquí.
 
 import { createClient } from '@supabase/supabase-js'
+
+const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
+const missing = required.filter(key => !process.env[key])
+if (missing.length > 0) {
+  throw new Error(
+    `Faltan variables de entorno requeridas: ${missing.join(', ')}. ` +
+    `Revisa la configuración en Render → Environment.`
+  )
+}
+
+// Quitamos cualquier "/" al final — si SUPABASE_URL se pegó con una
+// barra sobrante, construir "${url}/storage/v1/..." generaría una
+// doble barra que la API de Storage rechaza como ruta inválida.
+const normalizedUrl = process.env.SUPABASE_URL.replace(/\/+$/, '')
+
+export const supabase = createClient(
+  normalizedUrl,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+export const IMAGES_BUCKET = process.env.SUPABASE_BUCKET || 'diary-images'
 // Verificación de que las variables de entorno necesarias estén presentes. Si no, lanzamos un error para que Render nos avise y podamos arreglarlo. 
 const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
 const missing = required.filter(key => !process.env[key])
