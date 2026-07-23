@@ -86,9 +86,11 @@ export async function uploadImages(req, res) {
       const ext = outputFormat === 'png' ? 'png' : 'jpg'
       const storagePath = `${req.userId}/${crypto.randomUUID()}.${ext}`
 
+      console.log('Subiendo a bucket:', JSON.stringify(IMAGES_BUCKET), 'ruta:', JSON.stringify(storagePath))
+
       const { error: uploadError } = await supabase.storage
         .from(IMAGES_BUCKET)
-        .upload(storagePath, buffer, {
+          .upload(storagePath, buffer, {
           contentType: outputFormat === 'png' ? 'image/png' : 'image/jpeg',
           upsert: false
         })
