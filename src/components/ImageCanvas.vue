@@ -210,7 +210,7 @@ async function persist(img) {
 
     <div
       ref="canvasRef"
-      :class="['canvas', isDragOver ? 'drag-over' : '']"
+      :class="['canvas', editable ? 'is-editable' : 'is-readonly', isDragOver ? 'drag-over' : '']"
       @dragover.prevent="editable && (isDragOver = true)"
       @dragleave="isDragOver = false"
       @drop="editable && onDrop($event)"
@@ -275,14 +275,31 @@ async function persist(img) {
 .canvas {
   position: relative;
   width: 100%;
-  aspect-ratio: 21 / 9;
-  background: var(--sf2);
-  border: 1px dashed var(--bd);
+  aspect-ratio: 16 / 10;
   border-radius: var(--r);
   overflow: hidden;
   transition: border-color .14s, background .14s;
 }
-.canvas.drag-over { border-color: var(--a); background: var(--ad); }
+
+/* Modo edición: caja de dropzone visible, con borde punteado — usa las
+   variables del TEMA de la app (cambian con oscuro/claro/sepia). */
+.canvas.is-editable {
+  background: var(--sf2);
+  border: 1px dashed var(--bd);
+}
+.canvas.is-editable.drag-over { border-color: var(--a); background: var(--ad); }
+
+/* Modo solo-lectura (dentro de PaperView, tras guardar): SIN fondo ni
+   borde — transparente a propósito. PaperView tiene su propia paleta
+   fija en tonos crema/papel rayado, independiente del tema de la app,
+   así que en vez de perseguir un color que "combine" (y que cambiaría
+   según el tema activo), dejamos que el papel se vea directamente
+   detrás. El resultado: las fotos quedan flotando sobre las líneas
+   del cuaderno, sin ninguna caja visible alrededor. */
+.canvas.is-readonly {
+  background: transparent;
+  border: none;
+}
 
 .canvas-empty {
   position: absolute; inset: 0;
