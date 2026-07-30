@@ -11,7 +11,7 @@ import { findOrCreateEntry, attachSignedUrls } from '../utils/entryHelpers.js'
 
 const MAX_IMAGES_PER_ENTRY = 12
 const MAX_DIMENSION = 2000       // px — de sobra para verse bien en cualquier pantalla
-const JPEG_QUALITY = 85
+const IMAGE_QUALITY = 85
 
 function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n))
@@ -80,7 +80,7 @@ export async function uploadImages(req, res) {
           fit: 'inside',
           withoutEnlargement: true   // nunca agranda una imagen que ya era pequeña
         })
-        .toFormat(outputFormat, { quality: JPEG_QUALITY })
+        .toFormat(outputFormat, { quality: IMAGE_QUALITY })
         .toBuffer({ resolveWithObject: true })
 
       // Nunca confiamos en file.originalname (el nombre que manda el
@@ -89,8 +89,6 @@ export async function uploadImages(req, res) {
       // un nombre propio, impredecible, con un UUID.
       const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat
       const storagePath = `${req.userId}/${crypto.randomUUID()}.${ext}`
-
-      console.log('Subiendo a bucket:', JSON.stringify(IMAGES_BUCKET), 'ruta:', JSON.stringify(storagePath))
 
       const { error: uploadError } = await supabase.storage
         .from(IMAGES_BUCKET)
@@ -127,7 +125,7 @@ export async function uploadImages(req, res) {
 
   if (created.length === 0) {
     return res.status(400).json({
-      error: 'No se pudo procesar ninguna imagen. Verifica que sean archivos JPG/PNG válidos.'
+      error: 'No se pudo procesar ninguna imagen. Verifica que sean archivos JPG/PNG/WEBP válidos.'
     })
   }
 
