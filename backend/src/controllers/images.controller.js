@@ -67,7 +67,11 @@ export async function uploadImages(req, res) {
       //     COSA a la vez (como HTML o un script), dependiendo de
       //     qué programa los interprete. Al reconstruir el archivo
       //     píxel por píxel, cualquier payload escondido desaparece.
-      const outputFormat = file.mimetype === 'image/png' ? 'png' : 'jpeg'
+      // Después: Ahora se acepta webp y no se cambia el formato original
+      const outputFormat =
+        file.mimetype === 'image/png'  ? 'png'  :
+        file.mimetype === 'image/webp' ? 'webp' :
+        'jpeg'
       const { data: buffer, info } = await sharp(file.buffer)
         .rotate()
         .resize({
@@ -83,7 +87,7 @@ export async function uploadImages(req, res) {
       // cliente) para construir la ruta de guardado — podría contener
       // secuencias como "../../" o caracteres problemáticos. Generamos
       // un nombre propio, impredecible, con un UUID.
-      const ext = outputFormat === 'png' ? 'png' : 'jpg'
+      const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat
       const storagePath = `${req.userId}/${crypto.randomUUID()}.${ext}`
 
       console.log('Subiendo a bucket:', JSON.stringify(IMAGES_BUCKET), 'ruta:', JSON.stringify(storagePath))
@@ -91,7 +95,7 @@ export async function uploadImages(req, res) {
       const { error: uploadError } = await supabase.storage
         .from(IMAGES_BUCKET)
           .upload(storagePath, buffer, {
-          contentType: outputFormat === 'png' ? 'image/png' : 'image/jpeg',
+          contentType: `image/${outputFormat}`,
           upsert: false
         })
       if (uploadError) throw uploadError

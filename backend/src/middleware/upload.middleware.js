@@ -17,7 +17,7 @@ import multer from 'multer'
 // conocido) es siempre más seguro que "blacklist" (bloquear lo malo
 // conocido) — una blacklist siempre puede tener un hueco que no
 // anticipaste; una whitelist rechaza todo por defecto.
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png']
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function fileFilter(req, file, cb) {
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {

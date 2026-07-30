@@ -105,7 +105,7 @@ export function removeEntry(date) {
 // al usuario sin esperar un viaje de ida y vuelta al servidor, pero
 // la validación que realmente protege es la del servidor: cualquiera
 // puede saltarse este chequeo mandando la petición directamente.
-export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png']
+export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export const MAX_IMAGE_SIZE = 8 * 1024 * 1024   // 8MB, igual que el backend
 
 // Sube una o más imágenes a la entrada de una fecha dada.

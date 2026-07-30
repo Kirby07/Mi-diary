@@ -253,12 +253,13 @@ async function persist(img) {
         <span class="format-badge">JPG</span>
         <span class="format-badge">JPEG</span>
         <span class="format-badge">PNG</span>
+        <span class="format-badge">WEBP</span>
         <span class="format-note">· máx. 8MB</span>
       </div>
       <input
         ref="fileInputRef"
         type="file"
-        accept="image/jpeg,image/png"
+        accept="image/jpeg,image/png,image/webp"
         multiple
         class="hidden-input"
         @change="onFileInputChange"
