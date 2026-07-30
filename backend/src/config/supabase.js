@@ -22,9 +22,11 @@
 // quien decide si el usuario tiene permiso, ANTES de llegar aquí.
 
 import { createClient } from '@supabase/supabase-js'
-
+export const IMAGES_BUCKET = process.env.SUPABASE_BUCKET || 'diary-images'
+// Verificación de que las variables de entorno necesarias estén presentes. Si no, lanzamos un error para que Render nos avise y podamos arreglarlo. 
 const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
 const missing = required.filter(key => !process.env[key])
+
 if (missing.length > 0) {
   throw new Error(
     `Faltan variables de entorno requeridas: ${missing.join(', ')}. ` +
@@ -41,18 +43,6 @@ export const supabase = createClient(
   normalizedUrl,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
-
-export const IMAGES_BUCKET = process.env.SUPABASE_BUCKET || 'diary-images'
-// Verificación de que las variables de entorno necesarias estén presentes. Si no, lanzamos un error para que Render nos avise y podamos arreglarlo. 
-const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
-const missing = required.filter(key => !process.env[key])
-
-if (missing.length > 0) {
-  throw new Error(
-    `Faltan variables de entorno requeridas: ${missing.join(', ')}. ` +
-    `Revisa la configuración en Render → Environment.`
-  )
-}
 
 export const supabase = createClient(
   process.env.SUPABASE_URL,
