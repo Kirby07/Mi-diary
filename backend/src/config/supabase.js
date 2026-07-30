@@ -22,6 +22,9 @@
 // quien decide si el usuario tiene permiso, ANTES de llegar aquí.
 
 import { createClient } from '@supabase/supabase-js'
+// Nombre del bucket de Storage donde viven las imágenes del diario.
+// Configurable por variable de entorno para poder usar buckets
+// distintos en desarrollo y producción si algún día lo necesitas.
 export const IMAGES_BUCKET = process.env.SUPABASE_BUCKET || 'diary-images'
 // Verificación de que las variables de entorno necesarias estén presentes. Si no, lanzamos un error para que Render nos avise y podamos arreglarlo. 
 const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
@@ -44,12 +47,3 @@ export const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
-
-// Nombre del bucket de Storage donde viven las imágenes del diario.
-// Configurable por variable de entorno para poder usar buckets
-// distintos en desarrollo y producción si algún día lo necesitas.
-export const IMAGES_BUCKET = process.env.SUPABASE_BUCKET || 'diary-images'
