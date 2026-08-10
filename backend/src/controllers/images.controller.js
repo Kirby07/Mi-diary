@@ -67,22 +67,61 @@ export async function uploadImages(req, res) {
       //     COSA a la vez (como HTML o un script), dependiendo de
       //     qué programa los interprete. Al reconstruir el archivo
       //     píxel por píxel, cualquier payload escondido desaparece.
-      // Después: Ahora se acepta webp y no se cambia el formato original
-      const outputFormat =
-        file.mimetype === 'image/png'  ? 'png'  :
-        file.mimetype === 'image/webp' ? 'webp' :
-        'jpeg'
-      const { data: buffer, info } = await sharp(file.buffer)
-        .rotate()
-        .resize({
-          width: MAX_DIMENSION,
-          height: MAX_DIMENSION,
-          fit: 'inside',
-          withoutEnlargement: true   // nunca agranda una imagen que ya era pequeña
-        })
-        .toFormat(outputFormat, { quality: IMAGE_QUALITY })
-        .toBuffer({ resolveWithObject: true })
+      //
+      // Un WEBP puede traer múltiples frames (animación, como un GIF).
+      // metadata() solo lee la cabecera del archivo — no lo reconstruye,
+      // así que es barato — y nos deja decidir qué camino tomar antes
+      // de hacer el trabajo pesado.
+      const meta = await sharp(file.buffer).metadata()
+      const isAnimatedWebp = file.mimetype === 'image/webp' && meta.pages > 1
 
+      let outputFormat, buffer, info
+
+      if (isAnimatedWebp) {
+        // Camino ANIMADO: { animated: true } le dice a sharp que lea
+        // TODOS los frames, no solo el primero, y los preserve al
+        // re-codificar — así la animación sobrevive el reprocesamiento
+        // en vez de aplanarse a una sola imagen estática. Seguimos
+        // reconstruyendo el archivo desde cero (misma razón de siempre:
+        // EXIF, polyglots), solo que ahora frame por frame.
+        //
+        // Sin .rotate() aquí a propósito: corregir orientación EXIF
+        // frame por frame es un caso borde de sharp con resultados
+        // inconsistentes entre frames. En la práctica, un WEBP animado
+        // casi nunca trae ese metadato (suele salir ya normalizado de
+        // las herramientas que lo generan), así que omitirlo aquí
+        // tiene impacto real mínimo.
+        outputFormat = 'webp'
+        const result = await sharp(file.buffer, { animated: true })
+          .resize({
+            width: MAX_DIMENSION,
+            height: MAX_DIMENSION,
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .webp({ quality: IMAGE_QUALITY })
+          .toBuffer({ resolveWithObject: true })
+        buffer = result.data
+        info = result.info
+      } else {
+        // Camino ESTÁTICO (el de siempre): una imagen, un solo frame.
+        outputFormat =
+          file.mimetype === 'image/png'  ? 'png'  :
+          file.mimetype === 'image/webp' ? 'webp' :
+          'jpeg'
+        const result = await sharp(file.buffer)
+          .rotate()
+          .resize({
+            width: MAX_DIMENSION,
+            height: MAX_DIMENSION,
+            fit: 'inside',
+            withoutEnlargement: true   // nunca agranda una imagen que ya era pequeña
+          })
+          .toFormat(outputFormat, { quality: IMAGE_QUALITY })
+          .toBuffer({ resolveWithObject: true })
+        buffer = result.data
+        info = result.info
+      }
       // Nunca confiamos en file.originalname (el nombre que manda el
       // cliente) para construir la ruta de guardado — podría contener
       // secuencias como "../../" o caracteres problemáticos. Generamos

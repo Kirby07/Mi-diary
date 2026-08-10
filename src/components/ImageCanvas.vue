@@ -67,7 +67,13 @@ async function handleFiles(fileList) {
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       rejected.push(`${file.name} — formato no permitido`)
     } else if (file.size > MAX_IMAGE_SIZE) {
-      rejected.push(`${file.name} — supera 8MB`)
+      // Los WEBP animados suelen pesar mucho más que uno estático —
+      // si es el caso, damos una pista específica en vez del mensaje
+      // genérico, para que la persona entienda POR QUÉ es tan pesado.
+      const hint = file.type === 'image/webp'
+        ? ' (los WEBP animados pesan más — prueba una versión más corta, o sin animar)'
+        : ''
+      rejected.push(`${file.name} — supera 8MB${hint}`)
     } else {
       valid.push(file)
     }

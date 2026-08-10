@@ -23,7 +23,7 @@ function fileFilter(req, file, cb) {
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     // cb(error) le dice a multer "rechaza este archivo" — el error
     // termina en el manejador de errores centralizado de app.js.
-    return cb(new Error('Solo se permiten imágenes JPG, JPEG o PNG'))
+    return cb(new Error('Solo se permiten imágenes JPG, JPEG, PNG o WEBP'))
   }
   cb(null, true)   // null = sin error, true = acepta el archivo
 }
