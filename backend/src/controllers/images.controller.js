@@ -78,31 +78,23 @@ export async function uploadImages(req, res) {
       let outputFormat, buffer, info
 
       if (isAnimatedWebp) {
-        // Camino ANIMADO: { animated: true } le dice a sharp que lea
-        // TODOS los frames, no solo el primero, y los preserve al
-        // re-codificar — así la animación sobrevive el reprocesamiento
-        // en vez de aplanarse a una sola imagen estática. Seguimos
-        // reconstruyendo el archivo desde cero (misma razón de siempre:
-        // EXIF, polyglots), solo que ahora frame por frame.
-        //
-        // Sin .rotate() aquí a propósito: corregir orientación EXIF
-        // frame por frame es un caso borde de sharp con resultados
-        // inconsistentes entre frames. En la práctica, un WEBP animado
-        // casi nunca trae ese metadato (suele salir ya normalizado de
-        // las herramientas que lo generan), así que omitirlo aquí
-        // tiene impacto real mínimo.
         outputFormat = 'webp'
+        // Dentro del bloque "if (isAnimatedWebp)" — reemplaza el .resize():
         const result = await sharp(file.buffer, { animated: true })
           .resize({
             width: MAX_DIMENSION,
-            height: MAX_DIMENSION,
             fit: 'inside',
             withoutEnlargement: true
+            // Sin "height" aquí a propósito: para una imagen animada, sharp
+            // trata todos los frames como un lienzo apilado verticalmente.
+            // Pasar un height explícito puede interpretarse ambiguamente
+            // (¿por frame o por el lienzo completo apilado?). Restringir
+            // solo por ancho evita esa ambigüedad — el alto se deriva
+            // proporcionalmente, sin riesgo de que el recorte de altura
+            // corte a través de los límites entre frames.
           })
           .webp({ quality: IMAGE_QUALITY })
           .toBuffer({ resolveWithObject: true })
-        buffer = result.data
-        info = result.info
       } else {
         // Camino ESTÁTICO (el de siempre): una imagen, un solo frame.
         outputFormat =
