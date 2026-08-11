@@ -78,22 +78,13 @@ export async function uploadImages(req, res) {
       let outputFormat, buffer, info
 
       if (isAnimatedWebp) {
-        // Dentro del bloque "if (isAnimatedWebp)" — reemplaza el .resize():
-        const result = await sharp(file.buffer, { animated: true })
-          .resize({
-            width: MAX_DIMENSION,
-            fit: 'inside',
-            withoutEnlargement: true
-            // Sin "height" aquí a propósito: para una imagen animada, sharp
-            // trata todos los frames como un lienzo apilado verticalmente.
-            // Pasar un height explícito puede interpretarse ambiguamente
-            // (¿por frame o por el lienzo completo apilado?). Restringir
-            // solo por ancho evita esa ambigüedad — el alto se deriva
-            // proporcionalmente, sin riesgo de que el recorte de altura
-            // corte a través de los límites entre frames.
-          })
-          .webp({ quality: IMAGE_QUALITY })
-          .toBuffer({ resolveWithObject: true })
+        // No redimensionamos ni recodificamos frame por frame — reconstruir
+        // correctamente el metadato de disposición de cada frame es una
+        // zona frágil, y un error ahí produce animaciones "fantasma" como
+        // la que viste. Dejamos pasar los bytes originales intactos.
+        outputFormat = 'webp'
+        buffer = file.buffer
+        info = { width: meta.width, height: meta.height }
       } else {
         // Camino ESTÁTICO (el de siempre): una imagen, un solo frame.
         outputFormat =
