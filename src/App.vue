@@ -188,24 +188,40 @@ function resetActivity() {
 // Se llama cuando <AuthScreen> emite 'authenticated' (login o registro
 // exitoso). Recibe el token y los datos del usuario que devolvió el backend.
 async function onAuthenticated({ token, user: u }) {
-  api.setToken(token)   // a partir de aquí, api.js adjunta este token a TODAS las peticiones
+  api.setToken(token)
   user.value = u
-  await loadEntriesFromServer()
+  try {
+    await loadEntriesFromServer()
+  } catch {
+    // Ya se mostró el mensaje correspondiente dentro de
+    // loadEntriesFromServer() — nada más que hacer aquí.
+  }
 }
 
 // Trae todas las entradas del usuario desde Postgres y las convierte
 // al mismo formato { 'YYYY-MM-DD': {...} } que ya usaba toda la UI —
 // así WeekGrid, PaperView y EntryEditor no necesitan saber nada sobre
 // si los datos vienen de localStorage o de una API.
+// Reemplaza loadEntriesFromServer() completo por esto:
 async function loadEntriesFromServer() {
   loadingData.value = true
   try {
-    const list = await api.fetchEntries()       // array de entradas planas
+    const list = await api.fetchEntries()
     const map  = {}
-    for (const e of list) map[e.date] = e        // lo convertimos a objeto indexado por fecha
+    for (const e of list) map[e.date] = e
     entries.value = map
   } catch (err) {
-    showSt('No se pudieron cargar las entradas')
+    // Un 401/403 significa que el token ya no es válido (expiró o fue
+    // revocado) — en ese caso cerramos la sesión DE VERDAD, para que la
+    // persona vea la pantalla de login en vez de quedar "atascada" en
+    // un diario vacío sin entender por qué no ve sus entradas.
+    if (err instanceof api.ApiError && (err.status === 401 || err.status === 403)) {
+      logout()
+      showSt('Tu sesión expiró. Vuelve a iniciar sesión.')
+    } else {
+      showSt('No se pudieron cargar las entradas')
+    }
+    throw err   // dejamos que quien llamó a esta función también reaccione
   } finally {
     loadingData.value = false
   }
@@ -253,17 +269,17 @@ onMounted(async () => {
   const existingToken = api.getToken()
 
   if (existingToken) {
-    // Intentamos usar el token directamente pidiendo las entradas.
-    // Si el token expiró o es inválido, el backend responde 403
-    // y fetchEntries() lanza un error — lo atrapamos y mandamos
-    // de vuelta a la pantalla de login en vez de dejar la app rota.
-    try {
-      await loadEntriesFromServer()
-      user.value = { authenticated: true }   // marcador simple; no tenemos /me todavía
-    } catch {
-      api.setToken(null)   // el token ya no sirve, lo descartamos
-    }
+  try {
+    await loadEntriesFromServer()
+    user.value = { authenticated: true }
+  } catch {
+    // loadEntriesFromServer() ya deslogeó si la causa fue un token
+    // inválido. Para cualquier otro error (red, servidor caído) no
+    // forzamos logout — el token puede seguir siendo válido, solo
+    // no pudimos usarlo en este intento. Simplemente no marcamos
+    // sesión activa, y la persona verá la pantalla de login.
   }
+}
 
   // 3. Si hay sesión activa, decide si mostrar PIN o ir directo al diario
   if (user.value) {
