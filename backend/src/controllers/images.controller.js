@@ -78,7 +78,6 @@ export async function uploadImages(req, res) {
       let outputFormat, buffer, info
 
       if (isAnimatedWebp) {
-        outputFormat = 'webp'
         // Dentro del bloque "if (isAnimatedWebp)" — reemplaza el .resize():
         const result = await sharp(file.buffer, { animated: true })
           .resize({
