@@ -12,6 +12,7 @@ import cors from 'cors'
 import authRoutes from './routes/auth.routes.js'
 import entriesRoutes from './routes/entries.routes.js'
 import imagesRoutes from './routes/images.routes.js'
+import shareRoutes from './routes/share.routes.js'
 
 export const app = express()
 
@@ -46,16 +47,23 @@ app.use(express.json({ limit: '100kb' }))   // límite de tamaño: previene payl
 app.use('/auth', authRoutes)
 app.use('/entries', entriesRoutes)
 
-// images.routes.js se monta en la raíz porque sus rutas ya declaran
-// sus propios prefijos completos ('/entries/:date/images', '/images/:id')
-// — necesita convivir con entriesRoutes bajo el mismo prefijo /entries
-// sin que Express los confunda entre sí.
-app.use(imagesRoutes)
-
 // Ruta simple de salud — útil para verificar que el servidor responde
 // sin necesidad de autenticación (la usan los servicios de hosting
 // para saber si tu app sigue viva).
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
+
+// Link compartido de solo lectura — tiene una ruta PÚBLICA (/shared).
+app.use(shareRoutes)
+
+// images.routes.js se monta en la raíz porque sus rutas ya declaran
+// sus propios prefijos completos ('/entries/:date/images', '/images/:id')
+// — necesita convivir con entriesRoutes bajo el mismo prefijo /entries
+// sin que Express los confunda entre sí.
+//
+// OJO: images.routes.js hace router.use(requireAuth), y al estar montado
+// en la raíz eso aplica a TODO lo que llegue hasta aquí. Por eso /health
+// y shareRoutes (que tienen rutas públicas) van ANTES de esta línea.
+app.use(imagesRoutes)
 
 // ── Manejador de errores centralizado ──────────────────────────
 // Express reconoce este middleware como "manejador de errores" porque
@@ -75,7 +83,7 @@ app.use((err, req, res, next) => {
   if (err.name === 'MulterError') {
     const messages = {
       LIMIT_FILE_SIZE:  'La imagen supera el tamaño máximo permitido (8MB)',
-      LIMIT_FILE_COUNT: 'Puedes subir un máximo de 5 imágenes a la vez'
+      LIMIT_FILE_COUNT: 'Puedes subir un máximo de 3 imágenes a la vez'
     }
     return res.status(400).json({ error: messages[err.code] || err.message })
   }

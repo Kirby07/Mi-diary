@@ -31,3 +31,11 @@ export const uploadLimiter = rateLimit({
   max: 10,                      // 40 imágenes cada 15 min es generoso para uso normal
   message: { error: 'Demasiadas imágenes subidas en poco tiempo. Espera un momento.' }
 })
+// Ruta pública del link compartido. El token (256 bits) ya es imposible
+// de adivinar; este límite es contra abuso de costo: cada visita firma
+// URLs de todas las imágenes en Supabase.
+export const sharedViewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { error: 'Demasiadas visitas en poco tiempo. Espera un momento.' }
+})

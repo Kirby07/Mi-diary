@@ -36,6 +36,12 @@ openssl rand -base64 48
 ```
 Copia el resultado y pégalo como valor de `JWT_SECRET`.
 
+Para el link de "compartir en solo lectura" genera también `SHARE_TOKEN_KEY`
+(no la reutilices de `JWT_SECRET`; si la cambias, todos los links compartidos dejan de funcionar):
+```bash
+openssl rand -base64 32
+```
+
 ---
 
 ## 3. Instalar dependencias y crear las tablas

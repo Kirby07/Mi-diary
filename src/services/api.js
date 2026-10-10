@@ -115,7 +115,7 @@ export const MAX_IMAGES_PER_UPLOAD = 3            // igual que files: 3 en uploa
 export function uploadImages(date, files) {
   const formData = new FormData()
   // 'images' debe llamarse EXACTAMENTE igual que en
-  // upload.array('images', 5) del backend — FormData no tiene forma
+  // upload.array('images', 3) del backend — FormData no tiene forma
   // de "adivinar" el nombre de campo que Multer espera.
   for (const file of files) formData.append('images', file)
 
@@ -129,4 +129,35 @@ export function updateImage(id, { x, y, w }) {
 
 export function deleteImage(id) {
   return request(`/images/${id}`, { method: 'DELETE' })
+}
+
+// ── Link compartido (solo lectura) ─────────────────────────────
+// settings: la apariencia del dueño (tema, acento, fuente, nombre) —
+// el visitante ve el diario con ella.
+export function fetchShare() {
+  return request('/share')
+}
+
+export function createShare(settings) {
+  return request('/share', { method: 'POST', body: JSON.stringify({ settings }) })
+}
+
+export function updateShareSettings(settings) {
+  return request('/share/settings', { method: 'PUT', body: JSON.stringify({ settings }) })
+}
+
+export function revokeShare() {
+  return request('/share', { method: 'DELETE' })
+}
+
+// Pública, la usa el visitante sin cuenta. El token va en un header y no
+// en la URL de la API, para que no quede en los logs del servidor.
+export function fetchSharedDiary(shareToken) {
+  return request('/shared', { headers: { 'X-Share-Token': shareToken } })
+}
+
+// El token va tras "#": el navegador NUNCA envía el fragmento al servidor,
+// así que no aparece en los logs de Vercel ni en el header Referer.
+export function shareUrl(shareToken) {
+  return `${location.origin}/v#${shareToken}`
 }

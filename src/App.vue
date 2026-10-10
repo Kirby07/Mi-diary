@@ -9,6 +9,7 @@ import SettingsPanel from '@/components/SettingsPanel.vue'
 import { sha256 }              from '@/utils/crypto.js'
 import { fmtDate, getWeekDays, buildWeekLabel } from '@/utils/dates.js'
 import * as api from '@/services/api.js'
+import { applyTheme } from '@/utils/theme.js'
 
 // Nota: ya no importamos sanitize.js aquí. La sanitización del CONTENIDO
 // del diario ahora ocurre en el servidor (backend/src/utils/sanitize.js),
@@ -236,13 +237,7 @@ function logout() {
 
 // ── CSS dinámico ──────────────────────────────────────────────
 function applyAll() {
-  const el = document.getElementById('app')
-  if (!el) return
-  el.className = `th-${cfg.value.theme} ff-${cfg.value.font} fs-${cfg.value.fontSize}`
-  const hex = cfg.value.accent
-  document.documentElement.style.setProperty('--a', hex)
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (m) document.documentElement.style.setProperty('--ad', `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},.15)`)
+  applyTheme(cfg.value)
 }
 
 function onSettingsChange() {

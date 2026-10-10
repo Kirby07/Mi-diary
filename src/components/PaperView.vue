@@ -4,7 +4,8 @@ import ImageCanvas from '@/components/ImageCanvas.vue'
 
 defineProps({
   date:  { type: String, required: true },
-  entry: { type: Object, required: true }   // { title, content, mood, images }
+  entry: { type: Object, required: true },  // { title, content, mood, images }
+  readonly: { type: Boolean, default: false } // true en el link compartido: sin Editar/Borrar
 })
 const emit = defineEmits(['edit', 'delete'])
 </script>
@@ -44,7 +45,7 @@ const emit = defineEmits(['edit', 'delete'])
       <div class="paper-fold" />
     </div>
 
-    <div class="paper-actions">
+    <div v-if="!readonly" class="paper-actions">
       <button @click="emit('delete')" class="pa-btn pa-btn--danger">✕ Borrar</button>
       <button @click="emit('edit')"   class="pa-btn">✎ Editar</button>
     </div>

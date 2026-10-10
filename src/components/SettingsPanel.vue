@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { sha256, generateSalt } from '@/utils/crypto.js'
+import * as api from '@/services/api.js'
 
 const KEYS   = ['1','2','3','4','5','6','7','8','9','','0','⌫']
 const THEMES = [
@@ -65,6 +66,60 @@ async function pinNext() {
   }
 }
 
+// ── Link compartido (solo lectura) ──────────────────────────
+// shareToken: string si hay link activo, null si no, undefined mientras carga.
+const shareToken = ref(undefined)
+const shareBusy  = ref(false)
+const shareMsg   = ref('')
+const shareLink  = computed(() => shareToken.value ? api.shareUrl(shareToken.value) : '')
+
+// Solo la apariencia viaja al servidor — nunca el PIN ni su hash.
+const shareSettings = () => {
+  const { theme, accent, font, fontSize, name } = props.modelValue
+  return { theme, accent, font, fontSize, name }
+}
+
+function flashShare(msg) {
+  shareMsg.value = msg
+  setTimeout(() => { shareMsg.value = '' }, 3000)
+}
+
+onMounted(async () => {
+  try { shareToken.value = (await api.fetchShare()).token }
+  catch { shareToken.value = null; flashShare('No se pudo consultar el link') }
+})
+
+async function generateShare() {
+  if (shareToken.value && !confirm('El link actual dejará de funcionar para quien lo tenga. ¿Generar uno nuevo?')) return
+  shareBusy.value = true
+  try {
+    shareToken.value = (await api.createShare(shareSettings())).token
+    flashShare('Link listo')
+  } catch (err) { flashShare(err.message) }
+  finally { shareBusy.value = false }
+}
+
+async function copyShare() {
+  try { await navigator.clipboard.writeText(shareLink.value); flashShare('Copiado ✓') }
+  catch { flashShare('No se pudo copiar — selecciónalo a mano') }
+}
+
+async function revokeShare() {
+  if (!confirm('¿Revocar el link? Nadie podrá volver a abrirlo.')) return
+  shareBusy.value = true
+  try { await api.revokeShare(); shareToken.value = null; flashShare('Link revocado') }
+  catch (err) { flashShare(err.message) }
+  finally { shareBusy.value = false }
+}
+
+// Si cambia la apariencia con un link activo, el visitante la ve igual.
+let shareSync = null
+watch(() => JSON.stringify(shareSettings()), () => {
+  if (!shareToken.value) return
+  clearTimeout(shareSync)
+  shareSync = setTimeout(() => api.updateShareSettings(shareSettings()).catch(() => {}), 800)
+})
+
 function removePIN() {
   if (!confirm('¿Desactivar el bloqueo con PIN?')) return
   set({ hasPIN: false, hashedPIN: '', pinSalt: '', autoLock: 0 })
@@ -117,6 +172,26 @@ function removePIN() {
       <div class="opt-row">
         <button v-for="s in SIZES" :key="s.id" @click="set({ fontSize: s.id })" :class="['opt-btn', modelValue.fontSize === s.id ? 'active' : '']">{{ s.label }}</button>
       </div>
+    </div>
+
+    <!-- Compartir -->
+    <div class="card">
+      <p class="label">Compartir (solo lectura)</p>
+      <p class="sec-desc">
+        Quien tenga este link puede leer todo tu diario, con fotos, sin crear una cuenta.
+        No puede escribir ni borrar nada. Regenerarlo o revocarlo invalida el link anterior al instante.
+      </p>
+
+      <p v-if="shareToken === undefined" class="sec-desc">Cargando…</p>
+      <template v-else>
+        <input v-if="shareToken" :value="shareLink" readonly class="text-input share-input" @focus="$event.target.select()" />
+        <div class="sec-btns">
+          <button v-if="shareToken" @click="copyShare" class="sm-btn">Copiar link</button>
+          <button @click="generateShare" :disabled="shareBusy" class="sm-btn">{{ shareToken ? 'Regenerar' : 'Generar link' }}</button>
+          <button v-if="shareToken" @click="revokeShare" :disabled="shareBusy" class="sm-btn sm-btn-danger">Revocar</button>
+        </div>
+      </template>
+      <p class="share-msg">{{ shareMsg }}</p>
     </div>
 
     <!-- Seguridad -->
@@ -243,6 +318,9 @@ function removePIN() {
 .mini-key:active   { transform:scale(.92); }
 .mini-key.key-empty{ background:none; border:none; cursor:default; pointer-events:none; }
 .pin-err { font-size:10px; color:#F87B74; text-align:center; height:14px; margin-top:6px; }
+
+.share-input { font-family:'Courier New',monospace; font-size:11px; margin-bottom:4px; }
+.share-msg   { font-size:11px; color:var(--a); height:14px; margin-top:6px; }
 
 .sep { border-top:1px solid var(--bd); margin-top:14px; padding-top:14px; }
 </style>

@@ -24,6 +24,16 @@ model User {
   name         String   @default("Mi Diario")
   createdAt    DateTime @default(now())
 
+  // Link de solo lectura para compartir el diario (ver utils/shareToken.js).
+  // Nunca guardamos el token en claro: el HMAC sirve para BUSCARLO cuando
+  // llega una visita, y la versión cifrada (AES-256-GCM) permite que el
+  // dueño vuelva a copiar su link. Ambos dependen de SHARE_TOKEN_KEY, que
+  // solo vive en el servidor — una filtración de la base de datos sola no
+  // revela ningún link. null = no hay link activo.
+  shareTokenHash String?  @unique
+  shareTokenEnc  String?
+  shareSettings  Json?                       // tema/acento/fuente del dueño, para el visitante
+
   // Relación uno-a-muchos: un usuario tiene muchas entradas.
   // Esto no crea una columna nueva aquí — es solo la relación "inversa"
   // de la que se declara abajo en el modelo Entry.
