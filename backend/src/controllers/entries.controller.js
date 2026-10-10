@@ -36,6 +36,17 @@ export async function getEntries(req, res) {
 // que ya tenías en App.vue (persistEntry), solo que ahora vive
 // en el servidor y queda respaldada en disco real, no en el
 // navegador de un solo dispositivo.
+// El ánimo ahora es cualquier emoji (selector libre en el editor), así
+// que validamos aquí: exactamente UN grafema (Intl.Segmenter cuenta
+// 👨‍👩‍👧 o 👍🏽 como uno solo) y que sea un emoji de verdad, no texto.
+// Cualquier otra cosa se guarda como null.
+const segmenter = new Intl.Segmenter()
+export function isSingleEmoji(m) {
+  return typeof m === 'string' && m.length <= 32 &&
+    [...segmenter.segment(m)].length === 1 &&
+    /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u.test(m)
+}
+
 export async function upsertEntry(req, res) {
   const { date } = req.params           // viene de la URL: /entries/2026-06-18
   const { title, content, mood } = req.body
@@ -55,7 +66,7 @@ export async function upsertEntry(req, res) {
   const data = {
     title:   sanitize(title || '').slice(0, 100),
     content: sanitize(content).slice(0, 10_000),
-    mood:    mood || null
+    mood:    isSingleEmoji(mood) ? mood : null
   }
 
   // prisma.entry.upsert necesita saber CÓMO identificar el registro

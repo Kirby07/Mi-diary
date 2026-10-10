@@ -202,7 +202,6 @@ async function onAuthenticated({ token, user: u }) {
 // al mismo formato { 'YYYY-MM-DD': {...} } que ya usaba toda la UI —
 // así WeekGrid, PaperView y EntryEditor no necesitan saber nada sobre
 // si los datos vienen de localStorage o de una API.
-// Reemplaza loadEntriesFromServer() completo por esto:
 async function loadEntriesFromServer() {
   loadingData.value = true
   try {
@@ -269,17 +268,17 @@ onMounted(async () => {
   const existingToken = api.getToken()
 
   if (existingToken) {
-  try {
-    await loadEntriesFromServer()
-    user.value = { authenticated: true }
-  } catch {
-    // loadEntriesFromServer() ya deslogeó si la causa fue un token
-    // inválido. Para cualquier otro error (red, servidor caído) no
-    // forzamos logout — el token puede seguir siendo válido, solo
-    // no pudimos usarlo en este intento. Simplemente no marcamos
-    // sesión activa, y la persona verá la pantalla de login.
+    try {
+      await loadEntriesFromServer()
+      user.value = { authenticated: true }
+    } catch {
+      // loadEntriesFromServer() ya deslogeó si la causa fue un token
+      // inválido. Para cualquier otro error (red, servidor caído) no
+      // forzamos logout — el token puede seguir siendo válido, solo
+      // no pudimos usarlo en este intento. Simplemente no marcamos
+      // sesión activa, y la persona verá la pantalla de login.
+    }
   }
-}
 
   // 3. Si hay sesión activa, decide si mostrar PIN o ir directo al diario
   if (user.value) {

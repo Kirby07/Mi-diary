@@ -1,9 +1,12 @@
-<<script setup>
-import { ref, computed, nextTick } from 'vue'
+<script setup>
+import { ref, computed, nextTick, onBeforeUnmount } from 'vue'
+import { Picker } from 'emoji-picker-element'
+import es from 'emoji-picker-element/i18n/es'
+// ?url → Vite lo sirve como archivo propio del sitio. Sin esto el picker
+// lo pediría a cdn.jsdelivr.net y la CSP (connect-src) lo bloquearía.
+import emojiData from 'emoji-picker-element-data/es/cldr/data.json?url'
 import { fullDate } from '@/utils/dates.js'
 import ImageCanvas from '@/components/ImageCanvas.vue'
-
-const MOODS = ['😊','😄','😔','😤','😰','😴','🤩','💪','❤️','🤒']
 
 const props = defineProps({
   date:        { type: String, required: true },
@@ -37,11 +40,44 @@ function updateContent(e) {
   })
 }
 
-function toggleMood(m) {
-  const mood = props.modelValue.mood === m ? null : m
+// ── Selector de ánimo (estilo WhatsApp) ─────────────────────────
+// El picker se crea la primera vez que se abre: así no se descargan
+// los datos de emojis si la persona nunca lo usa.
+const pickerOpen = ref(false)
+const pickerHost = ref(null)
+const moodWrap   = ref(null)
+let picker = null
+
+function setMood(mood) {
   emit('update:modelValue', { ...props.modelValue, mood })
   emit('change')
 }
+
+function togglePicker() {
+  pickerOpen.value = !pickerOpen.value
+  if (!pickerOpen.value) return
+  if (!picker) {
+    picker = new Picker({ locale: 'es', i18n: es, dataSource: emojiData })
+    picker.addEventListener('emoji-click', e => {
+      setMood(e.detail.unicode)
+      pickerOpen.value = false
+    })
+  }
+  nextTick(() => pickerHost.value?.appendChild(picker))
+}
+
+function closeOnOutside(e) {
+  if (pickerOpen.value && !moodWrap.value?.contains(e.target)) pickerOpen.value = false
+}
+function closeOnEsc(e) {
+  if (e.key === 'Escape') pickerOpen.value = false
+}
+document.addEventListener('pointerdown', closeOnOutside)
+document.addEventListener('keydown', closeOnEsc)
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', closeOnOutside)
+  document.removeEventListener('keydown', closeOnEsc)
+})
 </script>
 
 <template>
@@ -60,13 +96,24 @@ function toggleMood(m) {
       />
 
       <!-- Selector de estado de ánimo -->
-      <div class="mood-row">
+      <div class="mood-row" ref="moodWrap">
         <button
-          v-for="m in MOODS" :key="m"
-          @click="toggleMood(m)"
-          :class="['mood-btn', modelValue.mood === m ? 'active' : '']"
-          :title="m"
-        >{{ m }}</button>
+          @click="togglePicker"
+          :class="['mood-btn', modelValue.mood ? 'active' : '']"
+          :aria-expanded="pickerOpen"
+          aria-label="Elegir estado de ánimo"
+          title="Estado de ánimo"
+        >
+          <span v-if="modelValue.mood">{{ modelValue.mood }}</span>
+          <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M8.5 14.5s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/>
+            <circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/>
+          </svg>
+        </button>
+        <button v-if="modelValue.mood" @click="setMood(null)" class="mood-clear"
+                aria-label="Quitar estado de ánimo" title="Quitar">✕</button>
+        <div v-show="pickerOpen" ref="pickerHost" class="mood-pop" />
       </div>
     </div>
 
@@ -121,11 +168,39 @@ function toggleMood(m) {
 }
 .editor-title::placeholder { color:var(--tf); }
 
-.mood-row { display:flex; gap:3px; padding-bottom:12px; border-bottom:1px solid var(--bd); flex-wrap:wrap; }
+.mood-row {
+  position:relative; display:flex; align-items:center; gap:6px;
+  padding-bottom:12px; border-bottom:1px solid var(--bd);
+}
 .mood-btn {
-  width:30px; height:30px; border-radius:var(--rs); border:1.5px solid transparent;
-  background:var(--sf2); display:flex; align-items:center; justify-content:center;
-  font-size:15px; cursor:pointer; transition:all .14s;
+  width:34px; height:34px; border-radius:var(--rs); border:1.5px solid transparent;
+  background:var(--sf2); color:var(--tm); display:flex; align-items:center; justify-content:center;
+  font-size:18px; cursor:pointer; transition:all .14s;
+}
+.mood-clear {
+  border:none; background:none; color:var(--tf); font-size:11px; cursor:pointer; padding:4px;
+}
+.mood-clear:hover { color:var(--tx); }
+.mood-pop {
+  position:absolute; top:calc(100% - 6px); left:0; z-index:20;
+  max-width:calc(100vw - 32px);
+  box-shadow:0 8px 24px rgba(0,0,0,.18); border-radius:var(--rl); overflow:hidden;
+}
+/* Las variables CSS atraviesan el shadow DOM del picker: lo pintamos
+   con los colores del tema activo (oscuro/claro/sepia). */
+.mood-pop :deep(emoji-picker) {
+  --background: var(--sf);
+  --border-color: var(--bd);
+  --input-border-color: var(--bd);
+  --input-font-color: var(--tx);
+  --input-placeholder-color: var(--tf);
+  --category-font-color: var(--tm);
+  --indicator-color: var(--a);
+  --outline-color: var(--a);
+  --button-hover-background: var(--sf3);
+  --button-active-background: var(--sf2);
+  width:min(340px, calc(100vw - 32px));
+  height:360px;
 }
 .mood-btn:hover  { background:var(--sf3); transform:scale(1.1); }
 .mood-btn.active { border-color:var(--a); background:var(--ad); }

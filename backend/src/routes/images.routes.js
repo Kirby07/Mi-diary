@@ -18,13 +18,13 @@ const router = Router()
 router.use(requireAuth)   // todas las rutas de este archivo requieren sesión
 
 // POST /entries/:date/images
-// upload.array('images', 5) → 'images' debe coincidir EXACTAMENTE con
+// upload.array('images', 3) → 'images' debe coincidir EXACTAMENTE con
 // el nombre de campo que usa el frontend al construir el FormData
-// (ver services/api.js), y 5 es el máximo de archivos por petición.
+// (ver services/api.js), y 3 es el máximo de archivos por petición.
 router.post(
   '/entries/:date/images',
   uploadLimiter,
-  upload.array('images', 5),
+  upload.array('images', 3),
   asyncHandler(uploadImages)
 )
 

@@ -80,8 +80,8 @@ export async function uploadImages(req, res) {
       if (isAnimatedWebp) {
         // No redimensionamos ni recodificamos frame por frame — reconstruir
         // correctamente el metadato de disposición de cada frame es una
-        // zona frágil, y un error ahí produce animaciones "fantasma" como
-        // la que viste. Dejamos pasar los bytes originales intactos.
+        // zona frágil, y un error ahí produce animaciones "fantasma" (frames
+        // pintados unos sobre otros). Dejamos pasar los bytes originales intactos.
         outputFormat = 'webp'
         buffer = file.buffer
         info = { width: meta.width, height: meta.height }

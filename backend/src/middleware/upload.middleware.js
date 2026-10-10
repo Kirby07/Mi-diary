@@ -36,7 +36,7 @@ export const upload = multer({
                                    // intente agotar el almacenamiento o
                                    // la memoria del servidor con un solo
                                    // archivo gigante
-    files: 3                      // máximo 5 imágenes por petición
+    files: 3                      // máximo 3 imágenes por petición
   }
 })
 

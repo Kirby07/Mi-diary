@@ -107,6 +107,7 @@ export function removeEntry(date) {
 // puede saltarse este chequeo mandando la petición directamente.
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export const MAX_IMAGE_SIZE = 8 * 1024 * 1024   // 8MB, igual que el backend
+export const MAX_IMAGES_PER_UPLOAD = 3            // igual que files: 3 en upload.middleware.js
 
 // Sube una o más imágenes a la entrada de una fecha dada.
 // files: array de objetos File (los que vienen de <input type="file"> o

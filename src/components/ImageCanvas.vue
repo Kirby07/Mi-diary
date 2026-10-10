@@ -5,7 +5,8 @@ import {
   updateImage  as apiUpdateImage,
   deleteImage  as apiDeleteImage,
   ACCEPTED_IMAGE_TYPES,
-  MAX_IMAGE_SIZE
+  MAX_IMAGE_SIZE,
+  MAX_IMAGES_PER_UPLOAD
 } from '@/services/api.js'
 
 const props = defineProps({
@@ -77,6 +78,12 @@ async function handleFiles(fileList) {
     } else {
       valid.push(file)
     }
+  }
+
+  // El backend rechaza la petición ENTERA si trae más de 3 archivos —
+  // mejor subir las primeras 3 y avisar de las demás.
+  for (const file of valid.splice(MAX_IMAGES_PER_UPLOAD)) {
+    rejected.push(`${file.name} — máximo ${MAX_IMAGES_PER_UPLOAD} imágenes a la vez`)
   }
 
   if (rejected.length) showError(`No se subieron: ${rejected.join(', ')}`)
